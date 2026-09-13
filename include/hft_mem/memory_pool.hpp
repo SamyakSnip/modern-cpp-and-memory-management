@@ -69,7 +69,27 @@ public:
         }
     }
 
-    
+    // O(1) Hot-Path Allocation: Pop head from free list
+    [[nodiscard]] T* allocate() {
+        if (free_list_head_ == nullptr) {
+            // Pool is exhausted (Out of memory)
+            return nullptr;
+        }
+
+        Block* block = free_list_head_;
+        free_list_head_ = free_list_head_->next;
+        return reinterpret_cast<T*>(block);
+    }
+
+    // O(1) Hot-Path Deallocation: Push block back to head of free list
+    void deallocate(T* ptr) noexcept {
+        if (ptr == nullptr) return;
+
+        Block* block = reinterpret_cast<Block*>(ptr);
+        block->next = free_list_head_;
+        free_list_head_ = block;
+    }
+
 
 
 };
