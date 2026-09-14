@@ -88,6 +88,22 @@ public:
         block->next = free_list_head_;
         free_list_head_ = block;
     }
+    
+    template <typename... Args>
+    [[nodiscard]] T*create(Args&&... args) {
+        T* ptr = allocate();
+        if(ptr == nullptr) return nullptr;
+        
+        
+        return new (ptr) T(std::forward<Args>(args)...);
+    }
+
+    void destory(T* ptr) noexcept {
+        if(ptr == nullptr) return;
+        ptr->~T();
+
+        deallocate(ptr);
+    }
 
 
 
