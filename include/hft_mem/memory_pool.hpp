@@ -72,7 +72,6 @@ public:
     // O(1) Hot-Path Allocation: Pop head from free list
     [[nodiscard]] T* allocate() {
         if (free_list_head_ == nullptr) {
-            // Pool is exhausted (Out of memory)
             return nullptr;
         }
 
