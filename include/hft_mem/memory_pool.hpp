@@ -98,7 +98,7 @@ public:
         return new (ptr) T(std::forward<Args>(args)...);
     }
 
-    void destory(T* ptr) noexcept {
+    void destroy(T* ptr) noexcept {
         if(ptr == nullptr) return;
         ptr->~T();
 
