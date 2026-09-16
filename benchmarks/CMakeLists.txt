@@ -1,0 +1,1 @@
+add_executable(bench_memory_pool bench_memory_pool.cpp)

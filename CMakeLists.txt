@@ -26,4 +26,8 @@ include_directories(include)
 enable_testing()
 add_subdirectory(tests)
 
+# 6. Benchmarks
+add_subdirectory(benchmarks)
+
+
 message(STATUS "Build configure for ${PROJECT_NAME} using C++20")
