@@ -47,6 +47,39 @@ public:
         T dummy;
         while (pop(dummy)) {}
     }
+
+        // Constructs an item directly in the ring buffer slot
+    template <typename... Args>
+    [[nodiscard]] bool emplace(Args&&... args) {
+        const std::size_t current_head = head_.load(std::memory_order_relaxed);
+        const std::size_t current_tail = tail_.load(std::memory_order_acquire);
+
+        // Check if queue is full
+        if (current_head - current_tail >= Capacity) {
+            return false; // Queue is full, cannot push
+        }
+
+        // 1. Calculate slot index using fast bitwise mask
+        auto* slot = reinterpret_cast<T*>(buffer_[current_head & BufferMask].storage);
+
+        // 2. Placement new: construct object in-place
+        new (slot) T(std::forward<Args>(args)...);
+
+        // 3. Publish the new head with release semantics
+        head_.store(current_head + 1, std::memory_order_release);
+
+        return true;
+    }
+
+    // Pushes an item by copying or moving
+    [[nodiscard]] bool push(const T& item) {
+        return emplace(item);
+    }
+
+    [[nodiscard]] bool push(T&& item) {
+        return emplace(std::move(item));
+    }
+
 };
 
 } // namespace hft
