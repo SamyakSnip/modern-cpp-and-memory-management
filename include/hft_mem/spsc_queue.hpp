@@ -80,6 +80,49 @@ public:
         return emplace(std::move(item));
     }
 
+        // Pops an item from the queue; returns false if the queue is empty
+    [[nodiscard]] bool pop(T& value) {
+        const std::size_t current_tail = tail_.load(std::memory_order_relaxed);
+        const std::size_t current_head = head_.load(std::memory_order_acquire);
+
+        // Check if queue is empty
+        if (current_head == current_tail) {
+            return false; // Queue is empty
+        }
+
+        // 1. Locate slot using bitwise mask
+        auto* slot = reinterpret_cast<T*>(buffer_[current_tail & BufferMask].storage);
+
+        // 2. Move the object out to caller
+        value = std::move(*slot);
+
+        // 3. Destroy the object in the slot
+        slot->~T();
+
+        // 4. Publish updated tail to free the slot for the Producer
+        tail_.store(current_tail + 1, std::memory_order_release);
+
+        return true;
+    }
+
+    // Returns true if the queue is currently empty
+    [[nodiscard]] bool empty() const noexcept {
+        return head_.load(std::memory_order_relaxed) == tail_.load(std::memory_order_relaxed);
+    }
+
+    // Returns the approximate number of items in the queue
+    [[nodiscard]] std::size_t size() const noexcept {
+        const std::size_t head = head_.load(std::memory_order_relaxed);
+        const std::size_t tail = tail_.load(std::memory_order_relaxed);
+        return (head >= tail) ? (head - tail) : 0;
+    }
+
+    // Returns the maximum capacity of the queue
+    [[nodiscard]] constexpr std::size_t capacity() const noexcept {
+        return Capacity;
+    }
+
+
 };
 
 } // namespace hft
