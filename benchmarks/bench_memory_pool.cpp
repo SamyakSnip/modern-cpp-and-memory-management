@@ -15,10 +15,16 @@ struct Order {
 
 // Prevents compiler from optimizing away unused variables (Dead Code Elimination)
 template <typename T>
-inline void do_not_optimize(T* ptr) {
-    // A volatile read tells the compiler: "This memory has side-effects, do not delete it!"
+inline void do_not_optimize(T*& ptr) {
+#if defined(__GNUC__) || defined(__clang__)
+    // Used on Linux, macOS, and MinGW (GCC / Clang)
+    asm volatile("" : "+r"(ptr) : : "memory");
+#else
+    // Used on Windows (MSVC)
     reinterpret_cast<volatile char*>(ptr)[0] = 0;
+#endif
 }
+
 
 int main() {
     constexpr std::size_t Iterations = 1'000'000;
